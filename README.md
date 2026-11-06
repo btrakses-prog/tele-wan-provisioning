@@ -147,7 +147,7 @@ Jika belum menggunakan PHPNuxBill Bridge, bagian billing mengikuti konfigurasi c
 Jalankan:
 
 ```bash
-sudo chown -R www-data:www-data /var/www/html/wan-provisioning
+sudo chown -R www-data:www-data /var/www/html/tele-wan-provisioning
 ```
 
 Atur izin folder:
@@ -374,7 +374,7 @@ Contoh backup:
 
 ```bash
 sudo tar -czf wanprovisioning-backup.tar.gz \
--c /var/www/html/wan-provisioning \
+-c /var/www/html/tele-wan-provisioning \
 config.php data logs
 ```
 
