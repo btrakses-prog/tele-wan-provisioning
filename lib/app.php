@@ -273,13 +273,21 @@ function wifi_profiles(string $deviceId): array {
   }
   return $out;
 }
-function wifi_set_task(string $deviceId,int $idx,string $ssid,string $password): string {
+function wifi_set_task(string $deviceId,int $idx,string $ssid,string $password,bool $open=false): string {
   if(mb_strlen($ssid,'UTF-8')<1||mb_strlen($ssid,'UTF-8')>32)throw new RuntimeException('SSID harus 1–32 karakter.');
-  if(strlen($password)<8||strlen($password)>63)throw new RuntimeException('Password Wi-Fi harus 8–63 karakter.');
+  if(!$open && (strlen($password)<8||strlen($password)>63))throw new RuntimeException('Password Wi-Fi harus 8–63 karakter.');
   $profiles=wifi_profiles($deviceId); $key=$idx===5?5:1; $w=$profiles[$key]??null;
   if(!$w)throw new RuntimeException('Jaringan WiFi tidak tersedia pada modem ini.');
-  if($w['pass_path']==='')throw new RuntimeException('Parameter password WiFi tidak tersedia untuk ditulis. Tidak ada perubahan dikirim.');
-  return set_parameter_values_task($deviceId,[[$w['ssid_path'],$ssid],[$w['pass_path'],$password]]);
+  $params=[[$w['ssid_path'],$ssid]];
+  if($open){
+    // TR-098 open network: disable Wi-Fi beacon security.
+    if(str_starts_with($w['key'],'tr098:')) $params[]=[$w['base'].'.BeaconType','None'];
+    else $params[]=['Device.WiFi.AccessPoint.'.$key.'.Security.Mode','None'];
+  } else {
+    if($w['pass_path']==='')throw new RuntimeException('Parameter password WiFi tidak tersedia untuk ditulis. Tidak ada perubahan dikirim.');
+    $params[]=[$w['pass_path'],$password];
+  }
+  return set_parameter_values_task($deviceId,$params);
 }
 function reboot_task(string $deviceId): string {
   $url=rtrim(cfg('genieacs_url'),'/').'/devices/'.rawurlencode($deviceId).'/tasks?connection_request';
