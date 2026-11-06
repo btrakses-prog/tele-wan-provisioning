@@ -61,19 +61,19 @@ Pastikan ekstensi curl dan json muncul.
 Upload ZIP V1.4.2 ke server, kemudian jalankan:
 
 ```bash
-sudo mkdir -p /var/www/html/wan-provisioning
+sudo mkdir -p /var/www/html/tele-wan-provisioning
 ```
 
 Ekstrak:
 
 ```bash
-sudo unzip WAN-Provisioning-V1.4.2-List-Offline.zip -d /var/www/html/wan-provisioning
+sudo unzip WAN-Provisioning-V1.4.2-List-Offline.zip -d /var/www/html/tele-wan-provisioning
 ```
 
 Masuk ke direktori:
 
 ```bash
-cd /var/www/html/wan-provisioning
+cd /var/www/html/tele-wan-provisioning
 ```
 
 Pastikan file berikut tersedia:
