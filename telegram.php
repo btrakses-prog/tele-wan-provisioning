@@ -120,6 +120,7 @@ try {
   elseif($p[0]==='wifiselect'){ $r=token_get($p[1]); start_wifi_change($chat,$r['device'],(int)($p[2]??0)); }
   elseif($p[0]==='wifi_edit'){ $r=token_get($p[1]); begin_wifi_edit($chat,$r['device'],(int)($p[2]??0)); }
   elseif($p[0]==='wifi_keep_ssid'){ $r=token_get($p[1]); begin_wifi_password_only($chat,$r['device'],(int)($p[2]??0)); }
+  elseif($p[0]==='wifi_open'){ $r=token_get($p[1]); begin_wifi_open($chat,$r['device'],(int)($p[2]??0)); }
   elseif($p[0]==='wifi_ssid_change'){ $r=token_get($p[1]); begin_wifi_ssid_prompt($chat,$r['device'],(int)($p[2]??0)); }
   elseif($p[0]==='wifiapply') apply_wifi_change($chat);
   elseif($p[0]==='wifiverify'){ $r=token_get($p[1]); verify_wifi_change($chat,$r['device'],(int)($p[2]??0),rawurldecode($p[3]??'')); }
@@ -1026,7 +1027,7 @@ function start_wifi_change($chat,string $device,int $idx): void {
   $profiles=wifi_profiles($device); if(!isset($profiles[$idx])) throw new RuntimeException('SSID'.$idx.' tidak tersedia pada modem ini.');
   $w=$profiles[$idx];$meta=device_meta($device);
   $pass=$w['password']!==''?'<code>'.htmlspecialchars($w['password']).'</code>':'<i>Password tidak dapat dibaca dari GenieACS.</i>';
-  $kb=[[['text'=>'✏️ UBAH SSID & PASSWORD','callback_data'=>'wifi_edit|'.token_put($device).'|'.$idx]],[['text'=>'⬅️ PILIH WIFI','callback_data'=>'wifimenu|'.token_put($device)]]];
+  $kb=[[['text'=>'✏️ UBAH SSID & PASSWORD','callback_data'=>'wifi_edit|'.token_put($device).'|'.$idx]],[['text'=>'🔓 NONAKTIFKAN PASSWORD','callback_data'=>'wifi_open|'.token_put($device).'|'.$idx]],[['text'=>'⬅️ PILIH WIFI','callback_data'=>'wifimenu|'.token_put($device)]]];
   tg_send($chat,'<b>📶 DETAIL WIFI</b>\n\n<b>Modem:</b> '.htmlspecialchars($meta['model']).'\n<b>SN:</b> <code>'.htmlspecialchars($meta['sn']).'</code>\n<b>Jaringan:</b> '.htmlspecialchars($w['label']).'\n<b>Status:</b> '.htmlspecialchars($w['enabled']==='true'?'Aktif':($w['enabled']==='false'?'Nonaktif':'Tidak diketahui')).'\n\n<b>SSID saat ini</b>\n<code>'.htmlspecialchars($w['ssid']).'</code>\n\n<b>Password saat ini</b>\n'.$pass,$kb);
 }
 function begin_wifi_edit($chat,string $device,int $idx): void {
@@ -1045,13 +1046,20 @@ function begin_wifi_password_only($chat,string $device,int $idx): void {
   state_set('await_'.$chat,['action'=>'wifi_password','device'=>$device,'index'=>$idx,'label'=>$w['label'],'old_ssid'=>$w['ssid'],'new_ssid'=>$w['ssid'],'model'=>$meta['model'],'sn'=>$meta['sn']]);
   tg_send($chat,'<b>🔐 PASSWORD WIFI BARU</b>\n\nNama SSID tetap: <code>'.htmlspecialchars($w['ssid']).'</code>\nKirim password baru (8–63 karakter).\n\nKetik /cancel untuk membatalkan.');
 }
+function begin_wifi_open($chat,string $device,int $idx): void {
+  if(!in_array($idx,[1,5],true)) throw new RuntimeException('Pilihan SSID tidak valid.');
+  $profiles=wifi_profiles($device); if(!isset($profiles[$idx])) throw new RuntimeException('Jaringan WiFi tidak tersedia.');
+  $w=$profiles[$idx]; $meta=device_meta($device);
+  state_set('wifi_'.$chat,['device'=>$device,'index'=>$idx,'label'=>$w['label'],'old_ssid'=>$w['ssid'],'new_ssid'=>$w['ssid'],'new_password'=>'','open'=>true,'model'=>$meta['model'],'sn'=>$meta['sn']]);
+  tg_send($chat,'<b>⚠️ NONAKTIFKAN KEAMANAN WIFI</b>\n\nJaringan: <b>'.htmlspecialchars($w['label']).'</b>\nSSID tetap: <code>'.htmlspecialchars($w['ssid']).'</code>\n\nWiFi akan menjadi jaringan terbuka dan siapa pun di sekitar dapat terhubung tanpa password. Lanjutkan?',[[['text'=>'🔓 YA, BUKA TANPA PASSWORD','callback_data'=>'wifiapply|'.$chat],['text'=>'✖️ BATAL','callback_data'=>'wificancel|'.$chat]]]);
+}
 function apply_wifi_change($chat): void {
-  $p=state_get('wifi_'.$chat);if(!$p||empty($p['device'])||!isset($p['index'],$p['new_ssid'],$p['new_password']))throw new RuntimeException('Data perubahan WiFi tidak lengkap atau sudah kedaluwarsa.');
-  $task=wifi_set_task($p['device'],(int)$p['index'],(string)$p['new_ssid'],(string)$p['new_password']);
+  $p=state_get('wifi_'.$chat);if(!$p||empty($p['device'])||!isset($p['index'],$p['new_ssid'])||(!empty($p['open'])?false:!isset($p['new_password'])))throw new RuntimeException('Data perubahan WiFi tidak lengkap atau sudah kedaluwarsa.');
+  $task=wifi_set_task($p['device'],(int)$p['index'],(string)$p['new_ssid'],(string)($p['new_password']??''),!empty($p['open']));
   // Do not retain credentials after task submission and never include them in logs.
   $device=$p['device'];$idx=(int)$p['index'];$newSsid=$p['new_ssid'];state_set('wifi_'.$chat,[]);
   log_event('wifi_change_task_sent',['device'=>$device,'index'=>$idx,'ssid'=>$newSsid,'task'=>$task]);
-  tg_send($chat,'<b>✅ PERINTAH WIFI DIKIRIM</b>\n\n<b>SSID baru:</b> <code>'.htmlspecialchars($newSsid).'</code>\n<b>Jaringan:</b> SSID'.$idx.'\n<b>Task GenieACS:</b> <code>'.htmlspecialchars($task).'</code>\n\nTunggu modem melakukan Inform, lalu periksa kembali detail WiFi untuk memastikan perubahan sudah diterapkan.',[[['text'=>'🔍 VERIFIKASI PERUBAHAN','callback_data'=>'wifiverify|'.token_put($device).'|'.$idx.'|'.rawurlencode($newSsid)]],[['text'=>'📶 MENU WIFI','callback_data'=>'wifimenu|'.token_put($device)]],[['text'=>'🏠 MENU UTAMA','callback_data'=>'home']]]);
+  tg_send($chat,'<b>✅ PERINTAH WIFI DIKIRIM</b>\n\n<b>SSID:</b> <code>'.htmlspecialchars($newSsid).'</code>\n<b>Jaringan:</b> SSID'.$idx.'\n<b>Keamanan:</b> '.(!empty($p['open'])?'Tanpa password (terbuka)':'Menggunakan password').'\n<b>Task GenieACS:</b> <code>'.htmlspecialchars($task).'</code>\n\nTunggu modem melakukan Inform, lalu periksa kembali detail WiFi untuk memastikan perubahan sudah diterapkan.',[[['text'=>'🔍 VERIFIKASI PERUBAHAN','callback_data'=>'wifiverify|'.token_put($device).'|'.$idx.'|'.rawurlencode($newSsid)]],[['text'=>'📶 MENU WIFI','callback_data'=>'wifimenu|'.token_put($device)]],[['text'=>'🏠 MENU UTAMA','callback_data'=>'home']]]);
 }
 
 function verify_wifi_change($chat,string $device,int $idx,string $expected): void {
