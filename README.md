@@ -28,7 +28,7 @@ Siapkan:
 - Domain atau subdomain dengan HTTPS publik untuk webhook Telegram.
 - Telegram Bot Token dari BotFather.
 - Telegram Admin ID.
-- File ZIP WAN-Provisioning-V1.4.2-List-Offline.zip.
+- File ZIP tele-wan-provisioning.zip.
 
 Aplikasi WAN Provisioning menggunakan penyimpanan JSON lokal dan tidak membutuhkan MySQL.
 
@@ -67,7 +67,7 @@ sudo mkdir -p /var/www/html/tele-wan-provisioning
 Ekstrak:
 
 ```bash
-sudo unzip WAN-Provisioning-V1.4.2-List-Offline.zip -d /var/www/html/tele-wan-provisioning
+sudo unzip tele-provisioning.zip -d /var/www/html/tele-wan-provisioning
 ```
 
 Masuk ke direktori:
@@ -153,9 +153,9 @@ sudo chown -R www-data:www-data /var/www/html/tele-wan-provisioning
 Atur izin folder:
 
 ```bash
-sudo chmod 750 /var/www/html/wan-provisioning/data
-sudo chmod 750 /var/www/html/wan-provisioning/logs
-sudo chmod 640 /var/www/html/wan-provisioning/config.php
+sudo chmod 750 /var/www/html/tele-wan-provisioning/data
+sudo chmod 750 /var/www/html/tele-wan-provisioning/logs
+sudo chmod 640 /var/www/html/tele-wan-provisioning/config.php
 ```
 
 Jangan menggunakan chmod 777 sebagai pengaturan permanen.
@@ -167,7 +167,7 @@ Webhook Telegram membutuhkan alamat HTTPS publik.
 Contoh alamat aplikasi:
 
 ```text
-https://bot.domainanda.com/wan-provisioning/telegram.php
+https://bot.domainanda.com/tele-wan-provisioning/telegram.php
 ```
 
 Pastikan:
@@ -197,7 +197,7 @@ Daftarkan webhook menggunakan terminal:
 
 ```bash
 curl -X POST "https://api.telegram.org/botTOKEN_BOT/setWebhook" \
--d "url=https://bot.domainanda.com/wan-provisioning/telegram.php" \
+-d "url=https://bot.domainanda.com/tele-wan-provisioning/telegram.php" \
 -d "secret_token=SECRET_WEBHOOK"
 ```
 
@@ -353,7 +353,7 @@ Pastikan informasi berikut terbaca jika tersedia:
 Lokasi log aplikasi:
 
 ```text
-/var/www/html/wan-provisioning/logs/audit.log
+/var/www/html/tele-wan-provisioning/logs/audit.log
 ```
 
 Log Apache:
