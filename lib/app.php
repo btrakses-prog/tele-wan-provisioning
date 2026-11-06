@@ -249,28 +249,29 @@ function wifi_read_value(array $obj,string $key): string {
 }
 function wifi_profiles(string $deviceId): array {
   $tree=wifi_tree($deviceId); $out=[];
-  foreach(($tree['tr098']??[]) as $idx=>$o){
-    if(!is_array($o)||!is_numeric((string)$idx))continue;
-    $ssid=wifi_read_value($o,'SSID'); if($ssid==='')continue;
+  // Strict policy: expose only TR-098 WLANConfiguration.1 and .5.
+  // Other instances (for example WLANConfiguration.8) are deliberately ignored.
+  foreach([1,5] as $n){
+    $o=$tree['tr098'][$n]??null;
+    if(!is_array($o)) continue;
+    $ssid=wifi_read_value($o,'SSID'); if($ssid==='') continue;
     $pass=wifi_read_value($o,'KeyPassphrase');
-    if($pass===''&&isset($o['PreSharedKey'][1])&&is_array($o['PreSharedKey'][1]))$pass=wifi_read_value($o['PreSharedKey'][1],'PreSharedKey');
-    $n=(int)$idx; $label=$n===1?'2.4 GHz (SSID1)':($n===5?'5 GHz (SSID5)':'WiFi '.$n);
-    $out['tr098:'.$n]=['index'=>$n,'key'=>'tr098:'.$n,'label'=>$label,'ssid'=>$ssid,'password'=>$pass,'enabled'=>wifi_read_value($o,'Enable'),'base'=>'InternetGatewayDevice.LANDevice.1.WLANConfiguration.'.$n,'ssid_path'=>'InternetGatewayDevice.LANDevice.1.WLANConfiguration.'.$n.'.SSID','pass_path'=>isset($o['KeyPassphrase'])?'InternetGatewayDevice.LANDevice.1.WLANConfiguration.'.$n.'.KeyPassphrase':(isset($o['PreSharedKey'][1]['PreSharedKey'])?'InternetGatewayDevice.LANDevice.1.WLANConfiguration.'.$n.'.PreSharedKey.1.PreSharedKey':'')];
+    if($pass===''&&isset($o['PreSharedKey'][1])&&is_array($o['PreSharedKey'][1])) $pass=wifi_read_value($o['PreSharedKey'][1],'PreSharedKey');
+    $label=$n===1?'2.4 GHz (SSID1)':'5 GHz (SSID5)';
+    $out[$n]=['index'=>$n,'key'=>'tr098:'.$n,'label'=>$label,'ssid'=>$ssid,'password'=>$pass,'enabled'=>wifi_read_value($o,'Enable'),'base'=>'InternetGatewayDevice.LANDevice.1.WLANConfiguration.'.$n,'ssid_path'=>'InternetGatewayDevice.LANDevice.1.WLANConfiguration.'.$n.'.SSID','pass_path'=>isset($o['KeyPassphrase'])?'InternetGatewayDevice.LANDevice.1.WLANConfiguration.'.$n.'.KeyPassphrase':(isset($o['PreSharedKey'][1]['PreSharedKey'])?'InternetGatewayDevice.LANDevice.1.WLANConfiguration.'.$n.'.PreSharedKey.1.PreSharedKey':'')];
   }
+  // TR-181 fallback is also restricted to exact instances 1 and 5;
+  // never infer that another instance (e.g. 8) is SSID1/SSID5 by frequency.
   $w=$tree['tr181']??[]; $ssids=$w['SSID']??[]; $aps=$w['AccessPoint']??[];
-  foreach($ssids as $idx=>$o){
-    if(!is_array($o)||!is_numeric((string)$idx))continue;
-    $ssid=wifi_read_value($o,'SSID'); if($ssid==='')continue;
-    $band=strtolower(wifi_read_value($o,'OperatingFrequencyBand')); $channel=wifi_read_value($o,'Channel');
-    $is5=(strpos($band,'5')!==false)||($band===''&&(is_numeric($channel)&&(int)$channel>14));
-    $ap=$aps[$idx]??[]; $sec=$ap['Security']??[]; $pass=wifi_read_value($sec,'KeyPassphrase');
-    if($pass===''&&isset($sec['PreSharedKey']))$pass=wifi_read_value($sec,'PreSharedKey');
-    $n=(int)$idx; $key='tr181:'.$n;
-    $out[$key]=['index'=>$n,'key'=>$key,'label'=>$is5?'5 GHz (Device.WiFi SSID.'.$n.')':'2.4 GHz (Device.WiFi SSID.'.$n.')','ssid'=>$ssid,'password'=>$pass,'enabled'=>wifi_read_value($o,'Enable'),'base'=>'Device.WiFi.SSID.'.$n,'ssid_path'=>'Device.WiFi.SSID.'.$n.'.SSID','pass_path'=>array_key_exists('KeyPassphrase',$sec)?'Device.WiFi.AccessPoint.'.$n.'.Security.KeyPassphrase':(array_key_exists('PreSharedKey',$sec)?'Device.WiFi.AccessPoint.'.$n.'.Security.PreSharedKey':'')];
+  foreach([1,5] as $n){
+    if(isset($out[$n]) || !isset($ssids[$n]) || !is_array($ssids[$n])) continue;
+    $o=$ssids[$n]; $ssid=wifi_read_value($o,'SSID'); if($ssid==='') continue;
+    $ap=$aps[$n]??[]; $sec=$ap['Security']??[]; $pass=wifi_read_value($sec,'KeyPassphrase');
+    if($pass===''&&isset($sec['PreSharedKey'])) $pass=wifi_read_value($sec,'PreSharedKey');
+    $label=$n===1?'2.4 GHz (SSID1)':'5 GHz (SSID5)';
+    $out[$n]=['index'=>$n,'key'=>'tr181:'.$n,'label'=>$label,'ssid'=>$ssid,'password'=>$pass,'enabled'=>wifi_read_value($o,'Enable'),'base'=>'Device.WiFi.SSID.'.$n,'ssid_path'=>'Device.WiFi.SSID.'.$n.'.SSID','pass_path'=>array_key_exists('KeyPassphrase',$sec)?'Device.WiFi.AccessPoint.'.$n.'.Security.KeyPassphrase':(array_key_exists('PreSharedKey',$sec)?'Device.WiFi.AccessPoint.'.$n.'.Security.PreSharedKey':'')];
   }
-  // Expose only one best profile for each band; TR-098 takes precedence when present.
-  $chosen=[]; foreach($out as $k=>$v){$band=strpos($v['label'],'5 GHz')!==false?'5':'2'; $slot=$band==='5'?5:1; if(!isset($chosen[$slot])||strpos($k,'tr098:')===0)$chosen[$slot]=$v;}
-  return $chosen;
+  return $out;
 }
 function wifi_set_task(string $deviceId,int $idx,string $ssid,string $password): string {
   if(mb_strlen($ssid,'UTF-8')<1||mb_strlen($ssid,'UTF-8')>32)throw new RuntimeException('SSID harus 1–32 karakter.');

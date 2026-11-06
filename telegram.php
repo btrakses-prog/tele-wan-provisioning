@@ -119,6 +119,8 @@ try {
   elseif($p[0]==='wifimenu'){ $r=token_get($p[1]); show_wifi_menu($chat,$r['device']); }
   elseif($p[0]==='wifiselect'){ $r=token_get($p[1]); start_wifi_change($chat,$r['device'],(int)($p[2]??0)); }
   elseif($p[0]==='wifi_edit'){ $r=token_get($p[1]); begin_wifi_edit($chat,$r['device'],(int)($p[2]??0)); }
+  elseif($p[0]==='wifi_keep_ssid'){ $r=token_get($p[1]); begin_wifi_password_only($chat,$r['device'],(int)($p[2]??0)); }
+  elseif($p[0]==='wifi_ssid_change'){ $r=token_get($p[1]); begin_wifi_ssid_prompt($chat,$r['device'],(int)($p[2]??0)); }
   elseif($p[0]==='wifiapply') apply_wifi_change($chat);
   elseif($p[0]==='wifiverify'){ $r=token_get($p[1]); verify_wifi_change($chat,$r['device'],(int)($p[2]??0),rawurldecode($p[3]??'')); }
   elseif($p[0]==='wificancel'){state_set('wifi_'.$chat,[]);state_set('await_'.$chat,[]);tg_send($chat,'<b>✖️ Perubahan WiFi dibatalkan.</b>');}
@@ -235,7 +237,7 @@ function show_main_menu($chat): void {
   [['text'=>'🔴 List Modem Offline','callback_data'=>'offlinedevices']],
   [['text'=>'🆕 Cek Modem Baru','callback_data'=>'newmodems']],
    [['text'=>'📝 Registrasi Pelanggan','callback_data'=>'register']],
-  [['text'=>'🔎 Cari ONT','callback_data'=>'search']],
+  [['text'=>'🔎 Cari ONT (/onu)','callback_data'=>'search']],
   [['text'=>'ℹ️ Bantuan','callback_data'=>'help']]
  ]);
 }
@@ -1028,9 +1030,20 @@ function start_wifi_change($chat,string $device,int $idx): void {
   tg_send($chat,'<b>📶 DETAIL WIFI</b>\n\n<b>Modem:</b> '.htmlspecialchars($meta['model']).'\n<b>SN:</b> <code>'.htmlspecialchars($meta['sn']).'</code>\n<b>Jaringan:</b> '.htmlspecialchars($w['label']).'\n<b>Status:</b> '.htmlspecialchars($w['enabled']==='true'?'Aktif':($w['enabled']==='false'?'Nonaktif':'Tidak diketahui')).'\n\n<b>SSID saat ini</b>\n<code>'.htmlspecialchars($w['ssid']).'</code>\n\n<b>Password saat ini</b>\n'.$pass,$kb);
 }
 function begin_wifi_edit($chat,string $device,int $idx): void {
+  $profiles=wifi_profiles($device);if(!isset($profiles[$idx]))throw new RuntimeException('Jaringan WiFi tidak tersedia.');$w=$profiles[$idx];$meta=device_meta($device);$t=token_put($device);
+  $base=['device'=>$device,'index'=>$idx,'label'=>$w['label'],'old_ssid'=>$w['ssid'],'model'=>$meta['model'],'sn'=>$meta['sn']];
+  state_set('wifi_edit_choice_'.$chat,$base);
+  tg_send($chat,'<b>✏️ PENGATURAN NAMA WIFI</b>\n\nJaringan: '.htmlspecialchars($w['label']).'\nSSID saat ini: <code>'.htmlspecialchars($w['ssid']).'</code>\n\nApakah nama SSID ingin diganti?',[[['text'=>'✏️ YA, GANTI NAMA SSID','callback_data'=>'wifi_ssid_change|'.$t.'|'.$idx]],[['text'=>'➡️ TIDAK, PERTAHANKAN NAMA','callback_data'=>'wifi_keep_ssid|'.$t.'|'.$idx]],[['text'=>'⬅️ KEMBALI','callback_data'=>'wifiselect|'.$t.'|'.$idx]]]);
+}
+function begin_wifi_ssid_prompt($chat,string $device,int $idx): void {
   $profiles=wifi_profiles($device);if(!isset($profiles[$idx]))throw new RuntimeException('Jaringan WiFi tidak tersedia.');$w=$profiles[$idx];$meta=device_meta($device);
   state_set('await_'.$chat,['action'=>'wifi_ssid','device'=>$device,'index'=>$idx,'label'=>$w['label'],'old_ssid'=>$w['ssid'],'model'=>$meta['model'],'sn'=>$meta['sn']]);
   tg_send($chat,'<b>✏️ UBAH NAMA WIFI</b>\n\nJaringan: '.htmlspecialchars($w['label']).'\nSSID saat ini: <code>'.htmlspecialchars($w['ssid']).'</code>\n\nKirim SSID baru (1–32 karakter). Ketik /cancel untuk batal.');
+}
+function begin_wifi_password_only($chat,string $device,int $idx): void {
+  $profiles=wifi_profiles($device);if(!isset($profiles[$idx]))throw new RuntimeException('Jaringan WiFi tidak tersedia.');$w=$profiles[$idx];$meta=device_meta($device);
+  state_set('await_'.$chat,['action'=>'wifi_password','device'=>$device,'index'=>$idx,'label'=>$w['label'],'old_ssid'=>$w['ssid'],'new_ssid'=>$w['ssid'],'model'=>$meta['model'],'sn'=>$meta['sn']]);
+  tg_send($chat,'<b>🔐 PASSWORD WIFI BARU</b>\n\nNama SSID tetap: <code>'.htmlspecialchars($w['ssid']).'</code>\nKirim password baru (8–63 karakter).\n\nKetik /cancel untuk membatalkan.');
 }
 function apply_wifi_change($chat): void {
   $p=state_get('wifi_'.$chat);if(!$p||empty($p['device'])||!isset($p['index'],$p['new_ssid'],$p['new_password']))throw new RuntimeException('Data perubahan WiFi tidak lengkap atau sudah kedaluwarsa.');
