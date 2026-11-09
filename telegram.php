@@ -33,17 +33,17 @@ try {
     }
     elseif(($st['action']??'')==='reg_address'){
       if($txt==='/cancel'){state_set('await_'.$chat,[]);tg_send($chat,'Registrasi dibatalkan.');}
-      elseif(mb_strlen($txt,'UTF-8')<4 || mb_strlen($txt,'UTF-8')>255){tg_send($chat,'Alamat minimal 4 dan maksimal 255 karakter. Kirim ulang atau /cancel.');}
+      elseif(mb_strlen($txt,'UTF-8')<1 || mb_strlen($txt,'UTF-8')>255){tg_send($chat,'Alamat wajib diisi minimal 1 dan maksimal 255 karakter. Kirim ulang atau /cancel.');}
       else {$st['address']=$txt;$st['action']='reg_email';state_set('await_'.$chat,$st);tg_send($chat,'Kirim email pelanggan, atau ketik /skip jika tidak ada.');}
     }
     elseif(($st['action']??'')==='reg_email'){
       if($txt==='/cancel'){state_set('await_'.$chat,[]);tg_send($chat,'Registrasi dibatalkan.');}
       elseif($txt!=='/skip' && !filter_var($txt,FILTER_VALIDATE_EMAIL)){tg_send($chat,'Format email tidak valid. Kirim ulang, /skip, atau /cancel.');}
-      else {$st['email']=$txt==='/skip'?'':$txt;$st['action']='reg_ppp_pass';state_set('await_'.$chat,$st);tg_send($chat,'Kirim password PPPoE pelanggan (minimal 6 karakter).');}
+      else {$st['email']=$txt==='/skip'?'':$txt;$st['action']='reg_ppp_pass';state_set('await_'.$chat,$st);tg_send($chat,'Kirim password PPPoE pelanggan (minimal 1 karakter, maksimal 64 karakter).');}
     }
     elseif(($st['action']??'')==='reg_ppp_pass'){
       if($txt==='/cancel'){state_set('await_'.$chat,[]);tg_send($chat,'Registrasi dibatalkan.');}
-      elseif(strlen($txt)<6 || strlen($txt)>64){tg_send($chat,'Password PPPoE harus 6–64 karakter. Kirim ulang atau /cancel.');}
+      elseif(strlen($txt)<1 || strlen($txt)>64){tg_send($chat,'Password PPPoE wajib diisi minimal 1 dan maksimal 64 karakter. Kirim ulang atau /cancel.');}
       else {$st['pppoe_password']=$txt;state_set('await_'.$chat,[]);state_set('registration_'.$chat,$st);show_registration_plans($chat);}
     }
     elseif(($st['action']??'')==='wifi_ssid'){
@@ -64,7 +64,7 @@ try {
       elseif(!ctype_digit($txt)||(int)$txt<1||(int)$txt>4094){tg_send($chat,'VLAN ID tidak valid. Masukkan angka 1 sampai 4094.');}
       else {
         $st['vlan_id']=(int)$txt; state_set('await_'.$chat,[]); state_set('zte_ppp_'.$chat,$st);
-        $msg='<b>🧾 KONFIRMASI WAN PPP ZTE</b>' . "\n\n" .
+        $msg='<b>🧾 KONFIRMASI WAN PPP ZTE</b>' . "\n━━━━━━━━━━━━━━━━━━━━\n" .
           'Model: <b>'.htmlspecialchars($st['model']).'</b>' . "\n" .
           'Username: <code>'.htmlspecialchars($st['username']).'</code>' . "\n" .
           'Password: ••••••••' . "\n" .
@@ -77,16 +77,16 @@ try {
         tg_send($chat,$msg,[[['text'=>'✅ YA, BUAT WAN PPP','callback_data'=>'ztepppapply|'.$chat],['text'=>'✖️ BATAL','callback_data'=>'ztepppcancel|'.$chat]]]);
       }
     }
-    elseif(($st['action']??'')==='hw_hotspot_vlan'){ if($txt==='/cancel'){state_set('await_'.$chat,[]);tg_send($chat,'Dibatalkan.');} elseif(!ctype_digit($txt)||(int)$txt<1||(int)$txt>4094){tg_send($chat,'VLAN ID tidak valid. Masukkan angka 1 sampai 4094.');} else { $st['vlan_id']=(int)$txt; state_set('await_'.$chat,[]); state_set('hw_hotspot_'.$chat,$st); tg_send($chat,"<b>🧾 KONFIRMASI WAN HOTSPOT HUAWEI</b>\n\nModel: <b>".htmlspecialchars($st['model'])."</b>\nVLAN ID: <b>".$st['vlan_id']."</b>\nMode: <code>IP_Bridged</code>\nIP Type: <code>DHCP</code>\nService List: <code>OTHER</code>\nNAT: <code>false</code>\nWAN Name: dibuat otomatis oleh modem\nSSID1 Binding: aktif\nSSID5 Binding: ".(!empty($st['has_ssid5'])?'aktif':'tidak tersedia, dilewati')."\nLAN1–LAN4: nonaktif\nTR069: objek yang terdeteksi akan dilindungi\n\nLanjutkan?",[[['text'=>'✅ YA, BUAT HOTSPOT','callback_data'=>'hwhotspotapply|'.$chat],['text'=>'✖️ BATAL','callback_data'=>'hwhotspotcancel|'.$chat]]]); } }
+    elseif(($st['action']??'')==='hw_hotspot_vlan'){ if($txt==='/cancel'){state_set('await_'.$chat,[]);tg_send($chat,'Dibatalkan.');} elseif(!ctype_digit($txt)||(int)$txt<1||(int)$txt>4094){tg_send($chat,'VLAN ID tidak valid. Masukkan angka 1 sampai 4094.');} else { $st['vlan_id']=(int)$txt; state_set('await_'.$chat,[]); state_set('hw_hotspot_'.$chat,$st); tg_send($chat,"<b>🧾 KONFIRMASI WAN HOTSPOT HUAWEI</b>\n━━━━━━━━━━━━━━━━━━━━\nModel: <b>".htmlspecialchars($st['model'])."</b>\nVLAN ID: <b>".$st['vlan_id']."</b>\nMode: <code>IP_Bridged</code>\nIP Type: <code>DHCP</code>\nService List: <code>OTHER</code>\nNAT: <code>false</code>\nWAN Name: dibuat otomatis oleh modem\nSSID1 Binding: aktif\nSSID5 Binding: ".(!empty($st['has_ssid5'])?'aktif':'tidak tersedia, dilewati')."\nLAN1–LAN4: nonaktif\nTR069: objek yang terdeteksi akan dilindungi\n\nLanjutkan?",[[['text'=>'✅ YA, BUAT HOTSPOT','callback_data'=>'hwhotspotapply|'.$chat],['text'=>'✖️ BATAL','callback_data'=>'hwhotspotcancel|'.$chat]]]); } }
     elseif(($st['action']??'')==='hw_ppp_user'){ if($txt==='/cancel'){state_set('await_'.$chat,[]);tg_send($chat,'Dibatalkan.');} elseif($txt===''){tg_send($chat,'Username PPPoE tidak boleh kosong.');} else { $st['username']=$txt; $st['action']='hw_ppp_pass'; state_set('await_'.$chat,$st); tg_send($chat,'Kirim password PPPoE Huawei.'); } }
     elseif(($st['action']??'')==='hw_ppp_pass'){ if($txt==='/cancel'){state_set('await_'.$chat,[]);tg_send($chat,'Dibatalkan.');} else { $st['password']=$txt; $st['action']='hw_ppp_vlan'; state_set('await_'.$chat,$st); tg_send($chat,'Kirim VLAN ID WAN PPP Huawei (1–4094). Kirim /cancel untuk batal.'); } }
-    elseif(($st['action']??'')==='hw_ppp_vlan'){ if($txt==='/cancel'){state_set('await_'.$chat,[]);tg_send($chat,'Dibatalkan.');} elseif(!ctype_digit($txt)||(int)$txt<1||(int)$txt>4094){tg_send($chat,'VLAN ID tidak valid. Masukkan angka 1 sampai 4094.');} else { $st['vlan_id']=(int)$txt; state_set('await_'.$chat,[]); state_set('hw_ppp_'.$chat,$st); $tr=(int)($st['tr069_count']??0); tg_send($chat,"<b>🧾 KONFIRMASI WAN PPP HUAWEI</b>\n\nModel: <b>".htmlspecialchars($st['model'])."</b>\nUsername: <code>".htmlspecialchars($st['username'])."</code>\nPassword: ••••••••\nVLAN ID: <b>".$st['vlan_id']."</b>\nMode: <code>IP_Routed</code>\nService: <code>INTERNET</code>\nNAT: Aktif\nTarget: <code>WCD.2 / WANPPPConnection.".(int)($st['target_index']??1)."</code> (".(($st['needs_add']??false)?'objek baru':'objek kosong dipakai ulang').")\nWi-Fi: aktifkan SSID1 dan SSID5 jika tersedia\nTR069: ".($tr?"terdeteksi pada $tr objek WAN IP; tidak akan diubah":'tidak terdeteksi dari indikator nama/layanan; seluruh WAN IP tetap tidak diubah')."\nLAN binding: tidak diubah.\n\nLanjutkan?",[[['text'=>'✅ YA, BUAT WAN PPP','callback_data'=>'hwpppapply|'.$chat],['text'=>'✖️ BATAL','callback_data'=>'hwpppcancel|'.$chat]]]); } }
+    elseif(($st['action']??'')==='hw_ppp_vlan'){ if($txt==='/cancel'){state_set('await_'.$chat,[]);tg_send($chat,'Dibatalkan.');} elseif(!ctype_digit($txt)||(int)$txt<1||(int)$txt>4094){tg_send($chat,'VLAN ID tidak valid. Masukkan angka 1 sampai 4094.');} else { $st['vlan_id']=(int)$txt; state_set('await_'.$chat,[]); state_set('hw_ppp_'.$chat,$st); $tr=(int)($st['tr069_count']??0); tg_send($chat,"<b>🧾 KONFIRMASI WAN PPP HUAWEI</b>\n━━━━━━━━━━━━━━━━━━━━\nModel: <b>".htmlspecialchars($st['model'])."</b>\nUsername: <code>".htmlspecialchars($st['username'])."</code>\nPassword: ••••••••\nVLAN ID: <b>".$st['vlan_id']."</b>\nMode: <code>IP_Routed</code>\nService: <code>INTERNET</code>\nNAT: Aktif\nTarget: <code>WCD.2 / WANPPPConnection.".(int)($st['target_index']??1)."</code> (".(($st['needs_add']??false)?'objek baru':'objek kosong dipakai ulang').")\nWi-Fi: aktifkan SSID1 dan SSID5 jika tersedia\nTR069: ".($tr?"terdeteksi pada $tr objek WAN IP; tidak akan diubah":'tidak terdeteksi dari indikator nama/layanan; seluruh WAN IP tetap tidak diubah')."\nLAN binding: tidak diubah.\n\nLanjutkan?",[[['text'=>'✅ YA, BUAT WAN PPP','callback_data'=>'hwpppapply|'.$chat],['text'=>'✖️ BATAL','callback_data'=>'hwpppcancel|'.$chat]]]); } }
     elseif(($st['action']??'')==='newwan_user'){ $st['username']=$txt; $st['action']='newwan_pass'; state_set('await_'.$chat,$st); tg_send($chat,'Kirim password PPPoE. Pesan ini tidak akan ditampilkan kembali.'); }
     elseif(($st['action']??'')==='newwan_pass'){ if($txt==='/cancel'){state_set('await_'.$chat,[]);tg_send($chat,'Dibatalkan.');} else { $st['password']=$txt; $st['action']='newwan_vlan'; state_set('await_'.$chat,$st); tg_send($chat,'Kirim VLAN ID untuk WAN Internet baru (1-4094). Kirim /cancel untuk batal.'); } }
-    elseif(($st['action']??'')==='newwan_vlan'){ if($txt==='/cancel'){state_set('await_'.$chat,[]);tg_send($chat,'Dibatalkan.');} elseif(!ctype_digit($txt)||(int)$txt<1||(int)$txt>4094){tg_send($chat,'VLAN ID tidak valid. Masukkan angka 1 sampai 4094.');} else { $st['vlan_id']=(int)$txt; state_set('await_'.$chat,[]); state_set('newwan_'.$chat,$st); tg_send($chat,"<b>🧾 KONFIRMASI WAN INTERNET</b>\n\n<b>Username PPPoE</b>\n<code>".htmlspecialchars($st['username'])."</code>\n<b>Password</b> ••••••••\n\n<b>Template konfigurasi</b>\n• Mode: <code>IP_Routed</code>\n• Service: <code>INTERNET</code>\n• NAT: <b>Aktif</b>\n• VLAN ID: <b>".$st['vlan_id']."</b>\n• Binding: LAN 1, WLAN 1, WLAN 5\n\nLanjutkan membuat WAN Internet?",[[['text'=>'✅ YA, BUAT WAN','callback_data'=>'newwanapply|'.$chat],['text'=>'✖️ BATAL','callback_data'=>'cancelnewwan|'.$chat]]]); } }
+    elseif(($st['action']??'')==='newwan_vlan'){ if($txt==='/cancel'){state_set('await_'.$chat,[]);tg_send($chat,'Dibatalkan.');} elseif(!ctype_digit($txt)||(int)$txt<1||(int)$txt>4094){tg_send($chat,'VLAN ID tidak valid. Masukkan angka 1 sampai 4094.');} else { $st['vlan_id']=(int)$txt; state_set('await_'.$chat,[]); state_set('newwan_'.$chat,$st); tg_send($chat,"<b>🧾 KONFIRMASI WAN INTERNET</b>\n━━━━━━━━━━━━━━━━━━━━\n<b>Username PPPoE</b>\n<code>".htmlspecialchars($st['username'])."</code>\n<b>Password</b> ••••••••\n\n<b>Template konfigurasi</b>\n• Mode: <code>IP_Routed</code>\n• Service: <code>INTERNET</code>\n• NAT: <b>Aktif</b>\n• VLAN ID: <b>".$st['vlan_id']."</b>\n• Binding: LAN 1, WLAN 1, WLAN 5\n\nLanjutkan membuat WAN Internet?",[[['text'=>'✅ YA, BUAT WAN','callback_data'=>'newwanapply|'.$chat],['text'=>'✖️ BATAL','callback_data'=>'cancelnewwan|'.$chat]]]); } }
     elseif(($st['action']??'')==='hotspot_vlan'){ if($txt==='/cancel'){state_set('await_'.$chat,[]);tg_send($chat,'Dibatalkan.');} elseif(!ctype_digit($txt)||(int)$txt<1||(int)$txt>4094){tg_send($chat,'VLAN ID tidak valid. Masukkan angka 1 sampai 4094.');} else { $st['vlan_id']=(int)$txt; $st['action']='hotspot_ssid_a'; state_set('await_'.$chat,$st); tg_send($chat,'Kirim nama SSID untuk WLAN '.$st['wlan_a'].'.'); } }
     elseif(($st['action']??'')==='hotspot_ssid_a'){ if($txt==='/cancel'){state_set('await_'.$chat,[]);tg_send($chat,'Dibatalkan.');} elseif($txt===''||mb_strlen($txt,'UTF-8')>32){tg_send($chat,'SSID harus 1–32 karakter. Silakan kirim ulang.');} else { $st['ssid_a']=$txt; $st['action']='hotspot_ssid_b'; state_set('await_'.$chat,$st); tg_send($chat,'Kirim nama SSID untuk WLAN '.$st['wlan_b'].'.'); } }
-    elseif(($st['action']??'')==='hotspot_ssid_b'){ if($txt==='/cancel'){state_set('await_'.$chat,[]);tg_send($chat,'Dibatalkan.');} elseif($txt===''||mb_strlen($txt,'UTF-8')>32){tg_send($chat,'SSID harus 1–32 karakter. Silakan kirim ulang.');} else { $st['ssid_b']=$txt; $st['action']='hotspot_confirm'; state_set('await_'.$chat,[]); state_set('hotspot_'.$chat,$st); tg_send($chat,"<b>🧾 KONFIRMASI WAN HOTSPOT</b>\n\nWAN IP: <b>".$st['wan_slot']."</b>\nVLAN ID: <b>".$st['vlan_id']."</b>\nMode: <code>IP_Bridged</code>\nService: <code>Other</code>\nAddressing: <code>DHCP</code>\nNAT: <b>Nonaktif</b>\nLAN Binding: LAN".$st['lan'].", WLAN".$st['wlan_a'].", WLAN".$st['wlan_b']."\nSSID WLAN".$st['wlan_a'].": <code>".htmlspecialchars($st['ssid_a'])."</code>\nSSID WLAN".$st['wlan_b'].": <code>".htmlspecialchars($st['ssid_b'])."</code>\nKeamanan Wi-Fi: <code>BeaconType=None</code> (terbuka/tanpa password)\n\nLanjutkan?",[[['text'=>'✅ YA, BUAT HOTSPOT','callback_data'=>'hotspotapply|'.$chat],['text'=>'✖️ BATAL','callback_data'=>'cancelhotspot|'.$chat]]]); } }
+    elseif(($st['action']??'')==='hotspot_ssid_b'){ if($txt==='/cancel'){state_set('await_'.$chat,[]);tg_send($chat,'Dibatalkan.');} elseif($txt===''||mb_strlen($txt,'UTF-8')>32){tg_send($chat,'SSID harus 1–32 karakter. Silakan kirim ulang.');} else { $st['ssid_b']=$txt; $st['action']='hotspot_confirm'; state_set('await_'.$chat,[]); state_set('hotspot_'.$chat,$st); tg_send($chat,"<b>🧾 KONFIRMASI WAN HOTSPOT</b>\n━━━━━━━━━━━━━━━━━━━━\nWAN IP: <b>".$st['wan_slot']."</b>\nVLAN ID: <b>".$st['vlan_id']."</b>\nMode: <code>IP_Bridged</code>\nService: <code>Other</code>\nAddressing: <code>DHCP</code>\nNAT: <b>Nonaktif</b>\nLAN Binding: LAN".$st['lan'].", WLAN".$st['wlan_a'].", WLAN".$st['wlan_b']."\nSSID WLAN".$st['wlan_a'].": <code>".htmlspecialchars($st['ssid_a'])."</code>\nSSID WLAN".$st['wlan_b'].": <code>".htmlspecialchars($st['ssid_b'])."</code>\nKeamanan Wi-Fi: <code>BeaconType=None</code> (terbuka/tanpa password)\n\nLanjutkan?",[[['text'=>'✅ YA, BUAT HOTSPOT','callback_data'=>'hotspotapply|'.$chat],['text'=>'✖️ BATAL','callback_data'=>'cancelhotspot|'.$chat]]]); } }
     else tg_send($chat,'Perintah tersedia: /start, /fiberhome, /huawei, /zte, /onu, /newonu, /offline, /help.');
   }
  } elseif(isset($u['callback_query'])) {
@@ -95,6 +95,7 @@ try {
   tg('answerCallbackQuery',['callback_query_id'=>$c['id']]);
   $p=explode('|',$data);
   if($p[0]==='home')show_main_menu($chat);
+   elseif($p[0]==='customers')show_customer_list($chat,(int)($p[1]??1));
   elseif($p[0]==='register') start_registration($chat);
   elseif($p[0]==='regplan') choose_registration_plan($chat,(int)($p[1]??0));
   elseif($p[0]==='regconfirm') submit_registration($chat);
@@ -120,7 +121,6 @@ try {
   elseif($p[0]==='wifiselect'){ $r=token_get($p[1]); start_wifi_change($chat,$r['device'],(int)($p[2]??0)); }
   elseif($p[0]==='wifi_edit'){ $r=token_get($p[1]); begin_wifi_edit($chat,$r['device'],(int)($p[2]??0)); }
   elseif($p[0]==='wifi_keep_ssid'){ $r=token_get($p[1]); begin_wifi_password_only($chat,$r['device'],(int)($p[2]??0)); }
-  elseif($p[0]==='wifi_open'){ $r=token_get($p[1]); begin_wifi_open($chat,$r['device'],(int)($p[2]??0)); }
   elseif($p[0]==='wifi_ssid_change'){ $r=token_get($p[1]); begin_wifi_ssid_prompt($chat,$r['device'],(int)($p[2]??0)); }
   elseif($p[0]==='wifiapply') apply_wifi_change($chat);
   elseif($p[0]==='wifiverify'){ $r=token_get($p[1]); verify_wifi_change($chat,$r['device'],(int)($p[2]??0),rawurldecode($p[3]??'')); }
@@ -217,7 +217,7 @@ function show_new_modems($chat): void {
   $n++;
   $entry='<b>'.$n.'. '.htmlspecialchars(trim($d['manufacturer'].' '.$d['model'])?:'Perangkat tidak dikenal').'</b>' . "\n" .
    'Serial: <code>'.htmlspecialchars($d['sn']?:'-').'</code>' . "\n" .
-   'Redaman Optik: <b>'.htmlspecialchars($d['rx']!==''?$d['rx']:'-').'</b>' . "\n" .
+   'Redaman Optik: '.rx_status_html($d['rx']!==''?$d['rx']:'-') . "\n" .
    'Last Inform: <code>'.date('d-m-Y H:i:s',$d['lastInform']).'</code>' . "\n\n";
   if(mb_strlen($body.$entry,'UTF-8')>3500 && $body!==$header){$parts[]=$body;$body='';}
   $body.=$entry;
@@ -232,14 +232,14 @@ function show_new_modems($chat): void {
 }
 
 function show_main_menu($chat): void {
- tg_send($chat,"<b>🌐 WAN PROVISIONING</b>\n<i>Manajemen ONT & layanan pelanggan</i>\n\nPilih menu yang ingin dibuka:",[
-  [['text'=>'📋 List FiberHome','callback_data'=>'devices'],['text'=>'📡 List Huawei','callback_data'=>'huaweidevices']],
-  [['text'=>'🔷 List ZTE','callback_data'=>'ztedevices']],
-  [['text'=>'🔴 List Modem Offline','callback_data'=>'offlinedevices']],
-  [['text'=>'🆕 Cek Modem Baru','callback_data'=>'newmodems']],
-   [['text'=>'📝 Registrasi Pelanggan','callback_data'=>'register']],
-  [['text'=>'🔎 Cari ONT (/onu)','callback_data'=>'search']],
-  [['text'=>'ℹ️ Bantuan','callback_data'=>'help']]
+ tg_send($chat,"<b>🌐 RAKAN-PRJ WAN PROVISIONING</b>\n<i>Manajemen ONT, jaringan, dan pelanggan</i>\n━━━━━━━━━━━━━━━━━━━━\n<b>📡 MONITORING MODEM</b>\nPilih vendor atau status perangkat:",[
+  [['text'=>'🟦 FiberHome','callback_data'=>'devices'],['text'=>'🟦 Huawei','callback_data'=>'huaweidevices']],
+  [['text'=>'🔷 ZTE','callback_data'=>'ztedevices']],
+  [['text'=>'🔴 Modem Offline','callback_data'=>'offlinedevices'],['text'=>'🆕 Modem Baru','callback_data'=>'newmodems']],
+  [['text'=>'🔎 Cari Modem / ONT','callback_data'=>'search']],
+  [['text'=>'👤 DETAIL PELANGGAN','callback_data'=>'customers|1']],
+  [['text'=>'📝 Registrasi Pelanggan Baru','callback_data'=>'register']],
+  [['text'=>'ℹ️ Bantuan & Panduan','callback_data'=>'help']]
  ]);
 }
 function token_put(string $device,string $base=''): string { $t=substr(hash('sha256',$device.'|'.$base),0,16); $all=state_get('tokens'); $all[$t]=['device'=>$device,'base'=>$base]; state_set('tokens',$all); return $t; }
@@ -262,7 +262,7 @@ function show_offline_devices_page($chat,int $offset=0): void {
   $lines[]='<b>'.$n.'. '.htmlspecialchars($user).'</b>';
   $lines[]='Model: '.htmlspecialchars($model);
   $lines[]='SN: <code>'.htmlspecialchars($sn).'</code> | Status: <b>OFFLINE</b>';
-  $lines[]='Redaman: <b>'.htmlspecialchars($d['rx']!==''?$d['rx']:'-').'</b>';
+  $lines[]='Redaman: '.rx_status_html($d['rx']!==''?$d['rx']:'-');
   $lines[]='';
  }
  $kb=[];if($end<$total)$kb[]=[['text'=>'➡️ TAMPILKAN SELANJUTNYA','callback_data'=>'offlinenext|'.$end]];
@@ -272,6 +272,16 @@ function show_offline_devices_page($chat,int $offset=0): void {
  tg_send($chat,implode("\n",$lines),$kb);
 }
 
+function rx_status_html($value): string {
+ $raw=trim((string)$value);
+ if($raw==='' || $raw==='-') return '⚪ Tidak tersedia';
+ $number=str_replace(',','.',preg_replace('/[^0-9,.-]/','',$raw));
+ if(!is_numeric($number)) return '⚪ '.htmlspecialchars($raw);
+ $dbm=(float)$number;
+ if($dbm>=-20.99) return '🟢 <b>'.htmlspecialchars($raw).' (Sangat Bagus)</b>';
+ if($dbm>=-23.99) return '🟡 <b>'.htmlspecialchars($raw).' (Perlu Diperhatikan)</b>';
+ return '🔴 <b>'.htmlspecialchars($raw).' (Buruk)</b>';
+}
 function show_search_devices($chat,string $search): void {
  $all=[];
  foreach(['fiberhome','huawei','zte'] as $vendor){
@@ -281,13 +291,60 @@ function show_search_devices($chat,string $search): void {
  foreach($all as $d){
   $tok=token_put($d['id']);
   $label=strtoupper($d['vendor']);
-  $message='<b>🔎 HASIL PENCARIAN '.$label.'</b>' . "\n\n".
-   '<b>Model:</b> '.htmlspecialchars($d['model']?:$label)."\n".
-   '<b>Serial Number:</b> <code>'.htmlspecialchars($d['sn']?:'-')."</code>\n".
-   '<b>PPP Username:</b> <code>'.htmlspecialchars($d['username']?:'-')."</code>\n".
-   '<b>IP PPPoE:</b> <code>'.htmlspecialchars($d['ppp_ip']?:'Belum tersedia')."</code>\n".
-   '<b>Status:</b> '.htmlspecialchars($d['ppp_status']??'UNKNOWN')."\n".
-   '<b>Redaman:</b> '.htmlspecialchars($d['rx']?:'-');
+  $status=strtoupper((string)($d['ppp_status']??'UNKNOWN'));
+  $statusHtml=(strpos($status,'ONLINE')===0?'🟢 <b>'.htmlspecialchars($status).'</b>':($status==='OFFLINE'?'🔴 <b>OFFLINE</b>':'⚪ '.htmlspecialchars($status)));
+  $username=trim((string)($d['username']??''));
+  $customer=null;
+  $billingError='';
+  if($username!==''){
+   try {
+    $billingData=billing_customer_lookup($username);
+    $customer=$billingData['customer']??null;
+    if(!is_array($customer)) $billingError='Respons detail pelanggan tidak memiliki data customer.';
+   } catch(Throwable $e) {
+    $billingError=$e->getMessage();
+   }
+  } else {
+   $billingError='Username PPPoE tidak ditemukan pada data GenieACS.';
+  }
+
+  $message='<b>🔎 HASIL PENCARIAN MODEM — '.$label.'</b>' . "\n━━━━━━━━━━━━━━━━━━━━\n";
+  if(is_array($customer)){
+   $billingStatus=trim((string)($customer['billing_status']??'Tidak diketahui'));
+   $billingStatusKey=strtolower($billingStatus);
+   $billingStatusHtml=in_array($billingStatusKey,['active','aktif','enabled','1'],true)
+     ?'🟢 <b>'.htmlspecialchars($billingStatus).'</b>'
+     :(in_array($billingStatusKey,['inactive','nonaktif','disabled','0'],true)?'🔴 <b>'.htmlspecialchars($billingStatus).'</b>':'🟡 <b>'.htmlspecialchars($billingStatus?:'Tidak diketahui').'</b>');
+   $message.='<b>👤 INFORMASI PELANGGAN PHPNuxBill</b>' . "\n".
+    'Nama: <b>'.htmlspecialchars((string)($customer['fullname']??'-'))."</b>\n".
+    'Username: <code>'.htmlspecialchars((string)($customer['pppoe_username']??$customer['username']??$username))."</code>\n".
+    'Status Billing: '.$billingStatusHtml."\n".
+    'Layanan: '.htmlspecialchars((string)($customer['service_type']??'-'))."\n".
+    'Nama Paket: '.htmlspecialchars((string)($customer['plan_name']??'-'))."\n".
+    'Kadaluarsa: '.htmlspecialchars((string)($customer['expiration']??'-'))."\n".
+    'Jenis Akun: '.htmlspecialchars((string)($customer['account_type']??'-'))."\n".
+    'Telepon: '.htmlspecialchars((string)($customer['phonenumber']??'-'))."\n".
+    'Alamat: '.htmlspecialchars((string)($customer['address']??'-'))."\n".
+    "━━━━━━━━━━━━━━━━━━━━\n";
+  } else {
+   $message.='<b>👤 INFORMASI PELANGGAN PHPNuxBill</b>' . "\n".
+    '<i>Data pelanggan belum berhasil diambil: '.htmlspecialchars($billingError)."</i>\n".
+    "━━━━━━━━━━━━━━━━━━━━\n";
+  }
+
+  $message.='<b>📡 INFORMASI PERANGKAT GENIEACS</b>' . "\n".
+   'Model: <b>'.htmlspecialchars($d['model']?:$label)."</b>\n".
+   'Serial Number: <code>'.htmlspecialchars($d['sn']?:'-')."</code>\n".
+   'Username PPPoE: <code>'.htmlspecialchars($username?:'-')."</code>\n".
+   'Status: '.$statusHtml."\n".
+   'IP Address: <code>'.htmlspecialchars($d['ppp_ip']?:'Belum tersedia')."</code>\n".
+   'Redaman RX: '.rx_status_html($d['rx']?:'-')."\n".
+   "━━━━━━━━━━━━━━━━━━━━\n";
+  if(is_array($customer)){
+   $message.='✅ <b>Pelanggan dan perangkat berhasil dicocokkan</b>';
+  } else {
+   $message.='⚠️ <b>Perangkat ditemukan, data billing belum cocok</b>';
+  }
   $callback=$d['vendor']==='huawei'?'huaweidevice':($d['vendor']==='zte'?'ztedevice':'device');
   tg_send($chat,$message,[[['text'=>'📋 LIHAT DETAIL WAN','callback_data'=>$callback.'|'.$tok]],[['text'=>'⚙️ PENGATURAN MODEM','callback_data'=>'modemmenu|'.$tok]]]);
  }
@@ -339,7 +396,7 @@ function show_devices_page($chat, int $offset=0): void {
   $status=$d['ppp_status']??'UNKNOWN';
   $lines[]="<b>".$number.". ".htmlspecialchars($user)."</b>";
   $lines[]="SN: <code>".htmlspecialchars($sn)."</code> | IP: <code>".htmlspecialchars($ip)."</code> | ".htmlspecialchars($status);
-  $lines[]="Redaman: <b>".htmlspecialchars($d['rx']!==''?$d['rx']:'-')."</b>";
+  $lines[]='Redaman: '.rx_status_html($d['rx']!==''?$d['rx']:'-');
   $lines[]="";
  }
  $keyboard=[];
@@ -374,7 +431,7 @@ function show_zte_devices_page($chat,int $offset=0): void {
   $n=$offset+$i+1;$user=$d['username']!==''?$d['username']:'PPP belum terbaca';$sn=$d['sn']!==''?$d['sn']:'-';$ip=$d['ppp_ip']!==''?$d['ppp_ip']:'Belum tersedia';
   $lines[]='<b>'.$n.'. '.htmlspecialchars($user).'</b>';
   $lines[]='SN: <code>'.htmlspecialchars($sn).'</code> | IP: <code>'.htmlspecialchars($ip).'</code> | '.htmlspecialchars($d['ppp_status']??'UNKNOWN');
-  $lines[]='Redaman: <b>'.htmlspecialchars($d['rx']!==''?$d['rx']:'-').'</b>';
+  $lines[]='Redaman: '.rx_status_html($d['rx']!==''?$d['rx']:'-');
   $lines[]='';
  }
  $kb=[];if($end<$total)$kb[]=[['text'=>'➡️ TAMPILKAN SELANJUTNYA ('.min($size,$total-$end).')','callback_data'=>'ztedevicesnext|'.$end]];
@@ -465,7 +522,7 @@ function show_huawei_devices_page($chat,int $offset=0): void {
   $user=$d['username']!==''?$d['username']:'PPP belum terbaca';$sn=$d['sn']!==''?$d['sn']:'-';$ip=$d['ppp_ip']!==''?$d['ppp_ip']:'Belum tersedia';
   $lines[]='<b>'.($offset+$i+1).'. '.htmlspecialchars($user).'</b>';
   $lines[]='SN: <code>'.htmlspecialchars($sn).'</code> | IP: <code>'.htmlspecialchars($ip).'</code> | '.htmlspecialchars($d['ppp_status']??'UNKNOWN');
-  $lines[]='Redaman: <b>'.htmlspecialchars($d['rx']!==''?$d['rx']:'-').'</b>';
+  $lines[]='Redaman: '.rx_status_html($d['rx']!==''?$d['rx']:'-');
   $lines[]='';
  }
  $kb=[];if($end<$total)$kb[]=[['text'=>'➡️ TAMPILKAN SELANJUTNYA ('.min($size,$total-$end).')','callback_data'=>'huaweidevicesnext|'.$end]];
@@ -785,7 +842,7 @@ function continue_internet_wan($chat){
  $task=apply_internet_template($p['device'],$new['base'],$p['username'],$p['password'],(int)$p['vlan_id']);
  log_event('wan_template_requested',['device'=>$p['device'],'base'=>$new['base'],'username'=>$p['username'],'task'=>$task]);
  state_set('newwan_'.$chat,[]);
- tg_send($chat,"<b>✅ KONFIGURASI WAN DIKIRIM</b>\n\nTemplate WAN Internet telah dikirim ke GenieACS pada <code>WANConnectionDevice.2.WANPPPConnection.1</code>. Modem perlu menyelesaikan task sebelum konfigurasi dapat dipastikan aktif.\n\n<b>Ringkasan WAN</b>\nNama: <code>2_INTERNET_R_VID_".(int)$p['vlan_id']."</code>\nMode: <code>IP_Routed</code>\nService: <code>INTERNET</code>\nNAT: Aktif\nVLAN ID: <b>".(int)$p['vlan_id']."</b>\nLAN Binding: LAN 1, WLAN 1, WLAN 5\nUsername: <code>".htmlspecialchars($p['username'])."</code>\nPassword: ••••••••\n\n<b>ID Task</b>\n<code>".htmlspecialchars($task)."</code>\n\nSetelah modem menyelesaikan task, buka Detail WAN untuk memeriksa hasilnya.",[[['text'=>'🏠 KEMBALI KE MENU UTAMA','callback_data'=>'home']]]);
+ tg_send($chat,"<b>✅ KONFIGURASI WAN DIKIRIM</b>\n━━━━━━━━━━━━━━━━━━━━\nTemplate WAN Internet telah dikirim ke GenieACS pada <code>WANConnectionDevice.2.WANPPPConnection.1</code>. Modem perlu menyelesaikan task sebelum konfigurasi dapat dipastikan aktif.\n\n<b>Ringkasan WAN</b>\nNama: <code>2_INTERNET_R_VID_".(int)$p['vlan_id']."</code>\nMode: <code>IP_Routed</code>\nService: <code>INTERNET</code>\nNAT: Aktif\nVLAN ID: <b>".(int)$p['vlan_id']."</b>\nLAN Binding: LAN 1, WLAN 1, WLAN 5\nUsername: <code>".htmlspecialchars($p['username'])."</code>\nPassword: ••••••••\n\n<b>ID Task</b>\n<code>".htmlspecialchars($task)."</code>\n\nSetelah modem menyelesaikan task, buka Detail WAN untuk memeriksa hasilnya.",[[['text'=>'🏠 KEMBALI KE MENU UTAMA','callback_data'=>'home']]]);
 }
 
 function start_hotspot_wan($chat,string $device): void {
@@ -837,7 +894,7 @@ function continue_hotspot_wan($chat): void {
  $ssidTask2=set_wan($p['device'],$ssidBase.$p['wlan_b'],['Enable'=>true,'SSID'=>$p['ssid_b'],'BeaconType'=>'None']);
  log_event('wan_hotspot_requested',['device'=>$p['device'],'base'=>$base,'wan_slot'=>$p['wan_slot'],'vlan_id'=>$p['vlan_id'],'task'=>$task,'ssid_task_a'=>$ssidTask,'ssid_task_b'=>$ssidTask2]);
  state_set('hotspot_'.$chat,[]);
- tg_send($chat,"<b>✅ KONFIGURASI WAN HOTSPOT DIKIRIM</b>\n\nWAN IP: <b>".$p['wan_slot']."</b>\nNama: <code>".$p['wan_slot'].'_INTERNET_B_VID_'.$p['vlan_id']."</code>\nMode: <code>IP_Bridged</code>\nService: <code>Other</code>\nAddressing: <code>DHCP</code>\nNAT: Nonaktif\nVLAN ID: <b>".$p['vlan_id']."</b>\nLAN Binding: LAN".$p['lan'].', WLAN'.$p['wlan_a'].', WLAN'.$p['wlan_b']."\nSSID WLAN".$p['wlan_a'].': <code>'.htmlspecialchars($p['ssid_a'])."</code>\nSSID WLAN".$p['wlan_b'].': <code>'.htmlspecialchars($p['ssid_b'])."</code>\nKeamanan: <code>BeaconType=None</code> (Wi-Fi terbuka)\n\nTask WAN: <code>".htmlspecialchars($task)."</code>\nTask SSID: <code>".htmlspecialchars($ssidTask)."</code> / <code>".htmlspecialchars($ssidTask2)."</code>\n\nGenieACS telah menerima perintah. Pastikan modem menyelesaikan semua task.",[[['text'=>'🏠 KEMBALI KE MENU UTAMA','callback_data'=>'home']]]);
+ tg_send($chat,"<b>✅ KONFIGURASI WAN HOTSPOT DIKIRIM</b>\n━━━━━━━━━━━━━━━━━━━━\nWAN IP: <b>".$p['wan_slot']."</b>\nNama: <code>".$p['wan_slot'].'_INTERNET_B_VID_'.$p['vlan_id']."</code>\nMode: <code>IP_Bridged</code>\nService: <code>Other</code>\nAddressing: <code>DHCP</code>\nNAT: Nonaktif\nVLAN ID: <b>".$p['vlan_id']."</b>\nLAN Binding: LAN".$p['lan'].', WLAN'.$p['wlan_a'].', WLAN'.$p['wlan_b']."\nSSID WLAN".$p['wlan_a'].': <code>'.htmlspecialchars($p['ssid_a'])."</code>\nSSID WLAN".$p['wlan_b'].': <code>'.htmlspecialchars($p['ssid_b'])."</code>\nKeamanan: <code>BeaconType=None</code> (Wi-Fi terbuka)\n\nTask WAN: <code>".htmlspecialchars($task)."</code>\nTask SSID: <code>".htmlspecialchars($ssidTask)."</code> / <code>".htmlspecialchars($ssidTask2)."</code>\n\nGenieACS telah menerima perintah. Pastikan modem menyelesaikan semua task.",[[['text'=>'🏠 KEMBALI KE MENU UTAMA','callback_data'=>'home']]]);
 }
 
 function show_wan($chat,$id,$base){
@@ -876,6 +933,87 @@ function apply_change($chat,$key){
 }
 
 /* ================= REGISTRASI PELANGGAN PHPNuxBill ================= */
+function billing_customer_lookup(string $username): array {
+  $base=rtrim((string)cfg('billing_base_url',''),'/');
+  $secret=(string)cfg('billing_api_secret','');
+  if($base==='' || $secret==='') throw new RuntimeException('Konfigurasi PHPNuxBill belum diisi (billing_base_url / billing_api_secret).');
+  $url=$base.'/?_route=plugin/wanprovisioning_api/customer&username='.rawurlencode($username);
+  $ch=curl_init($url);
+  curl_setopt_array($ch,[
+    CURLOPT_RETURNTRANSFER=>true,
+    CURLOPT_TIMEOUT=>cfg('request_timeout',15),
+    CURLOPT_HTTPHEADER=>['Accept: application/json','X-WANPROV-KEY: '.$secret],
+    CURLOPT_FOLLOWLOCATION=>false
+  ]);
+  $raw=curl_exec($ch);$err=curl_error($ch);$code=(int)curl_getinfo($ch,CURLINFO_HTTP_CODE);curl_close($ch);
+  if($raw===false) throw new RuntimeException('Koneksi PHPNuxBill gagal: '.$err);
+  $data=json_decode($raw,true);
+  if($code<200||$code>=300){
+    $message=is_array($data)?($data['error']??('HTTP '.$code)):('HTTP '.$code.' dari PHPNuxBill');
+    throw new RuntimeException('PHPNuxBill: '.$message);
+  }
+  if(!is_array($data)||empty($data['ok'])) throw new RuntimeException(is_array($data)?($data['error']??'Respons PHPNuxBill tidak valid.'):'Respons PHPNuxBill bukan JSON.');
+  return $data;
+}
+
+function billing_customers_page(int $page): array {
+  $base=rtrim((string)cfg('billing_base_url',''),'/');
+  $secret=(string)cfg('billing_api_secret','');
+  if($base==='' || $secret==='') throw new RuntimeException('Konfigurasi PHPNuxBill belum diisi (billing_base_url / billing_api_secret).');
+  $url=$base.'/?_route=plugin/wanprovisioning_api/customers&page='.max(1,$page);
+  $ch=curl_init($url);
+  curl_setopt_array($ch,[
+    CURLOPT_RETURNTRANSFER=>true,
+    CURLOPT_TIMEOUT=>cfg('request_timeout',15),
+    CURLOPT_HTTPHEADER=>['Accept: application/json','X-WANPROV-KEY: '.$secret],
+    CURLOPT_FOLLOWLOCATION=>false
+  ]);
+  $raw=curl_exec($ch);$err=curl_error($ch);$code=(int)curl_getinfo($ch,CURLINFO_HTTP_CODE);curl_close($ch);
+  if($raw===false) throw new RuntimeException('Koneksi PHPNuxBill gagal: '.$err);
+  $data=json_decode($raw,true);
+  if($code<200||$code>=300) throw new RuntimeException('PHPNuxBill: '.(is_array($data)?($data['error']??('HTTP '.$code)):('HTTP '.$code)));
+  if(!is_array($data)||empty($data['ok'])||!isset($data['customers'])||!is_array($data['customers'])) throw new RuntimeException('Respons daftar pelanggan PHPNuxBill tidak valid.');
+  return $data;
+}
+function show_customer_list($chat,int $page=1): void {
+  try {
+    $data=billing_customers_page($page);
+  } catch(Throwable $e) {
+    tg_send($chat,'<b>👤 DETAIL PELANGGAN</b>'."\n\nTidak dapat mengambil daftar pelanggan.\n<code>".htmlspecialchars($e->getMessage())."</code>",[[['text'=>'🔄 COBA LAGI','callback_data'=>'customers|'.$page]],[['text'=>'🏠 MENU UTAMA','callback_data'=>'home']]]);
+    return;
+  }
+  $customers=$data['customers'];
+  $total=count($customers);
+  if($total===0) {
+    tg_send($chat,'<b>👤 DETAIL PELANGGAN</b>'."\n\nTidak ada data pelanggan pada halaman ini.",[[['text'=>'⬅️ SEBELUMNYA','callback_data'=>'customers|'.max(1,$page-1)]],[['text'=>'🏠 MENU UTAMA','callback_data'=>'home']]]);
+    return;
+  }
+  $msg='<b>👤 DETAIL PELANGGAN PHPNuxBill</b>'."\n".
+       '<i>Halaman '.$page.' · Maksimal 25 pelanggan per pesan</i>'."\n".
+       "━━━━━━━━━━━━━━━━━━━━\n";
+  foreach($customers as $idx=>$c) {
+    $st=strtolower(trim((string)($c['status']??'')));
+    $dot=in_array($st,['active','aktif','enabled','1'],true)?'🟢':(in_array($st,['inactive','nonaktif','disabled','0','expired','kadaluarsa','kedaluwarsa'],true)?'🔴':'🟡');
+    $name=trim((string)($c['fullname']??'')) ?: '-';
+    $username=trim((string)($c['username']??'')) ?: '-';
+    $plan=trim((string)($c['plan_name']??'')) ?: '-';
+    $expiry=trim((string)($c['expiration']??'')) ?: '-';
+    $msg.=($idx+1).'. '.$dot.' <b>'.htmlspecialchars($name)."</b>\n".
+          '   Username: <code>'.htmlspecialchars($username)."</code>\n".
+          '   Paket: '.htmlspecialchars($plan)."\n".
+          '   Masa aktif: '.htmlspecialchars($expiry)."\n".
+          "────────────────────\n";
+  }
+  $msg.='<i>Menampilkan '.$total.' pelanggan pada halaman '.$page.'.</i>';
+  $buttons=[];
+  if($page>1) $buttons[]=['text'=>'⬅️ SEBELUMNYA','callback_data'=>'customers|'.($page-1)];
+  if(!empty($data['has_more'])) $buttons[]=['text'=>'➡️ BERIKUTNYA','callback_data'=>'customers|'.($page+1)];
+  $rows=[];
+  if($buttons) $rows[]=$buttons;
+  $rows[]=[['text'=>'🔄 MUAT ULANG','callback_data'=>'customers|'.$page],['text'=>'🏠 MENU UTAMA','callback_data'=>'home']];
+  tg_send($chat,$msg,$rows);
+}
+
 function billing_api(string $action, ?array $body=null): array {
   $base=rtrim((string)cfg('billing_base_url',''),'/');
   $secret=(string)cfg('billing_api_secret','');
@@ -972,13 +1110,17 @@ function submit_registration($chat): void {
   $customer=$result['customer']??[];
   $returnedUsername=(string)($customer['username']??$username);
   log_event('billing_customer_registered',['chat_id'=>$chat,'username'=>$returnedUsername,'plan_id'=>$st['plan_id']]);
-  tg_send($chat,'<b>✅ REGISTRASI BERHASIL</b>' . "\n\n".
-    'Pelanggan: <b>'.htmlspecialchars((string)$st['fullname']).'</b>' . "\n".
+  tg_send($chat,'<b>✅ REGISTRASI PELANGGAN BERHASIL</b>' . "\n━━━━━━━━━━━━━━━━━━━━\n".
+    '<b>👤 DATA PELANGGAN</b>' . "\n".
+    'Nama: <b>'.htmlspecialchars((string)$st['fullname']).'</b>' . "\n".
     'Username Billing / PPPoE: <code>'.htmlspecialchars($returnedUsername).'</code>' . "\n".
+    'Nomor HP: <code>'.htmlspecialchars((string)$st['phonenumber']).'</code>' . "\n".
+    'Alamat: '.htmlspecialchars((string)$st['address'])."\n".
     'Paket: <b>'.htmlspecialchars((string)$st['plan_name']).'</b>' . "\n".
+    'Biaya: <b>Rp'.number_format((float)$st['plan_price'],0,',','.').'</b>' . "\n".
     'Masa aktif: <b>31 hari</b>' . "\n".
-    'ID pelanggan: <code>'.htmlspecialchars((string)($customer['id']??'-')).'</code>' . "\n\n".
-    'Tahap berikutnya: pilih modem/ONT berdasarkan Serial Number, lalu konfigurasi WAN PPPoE melalui GenieACS.',
+    'ID pelanggan: <code>'.htmlspecialchars((string)($customer['id']??'-')).'</code>' . "\n━━━━━━━━━━━━━━━━━━━━\n".
+    'Selanjutnya pilih modem/ONT berdasarkan Serial Number untuk konfigurasi WAN PPPoE melalui GenieACS.',
     [[['text'=>'📡 PILIH DARI LIST FIBERHOME','callback_data'=>'devices']],[['text'=>'📶 PILIH DARI LIST HUAWEI','callback_data'=>'huaweidevices']],[['text'=>'🔷 PILIH DARI LIST ZTE','callback_data'=>'ztedevices']],[['text'=>'🆕 CEK MODEM BARU','callback_data'=>'newmodems']],[['text'=>'🏠 MENU UTAMA','callback_data'=>'home']]]);
 }
 
@@ -1027,7 +1169,7 @@ function start_wifi_change($chat,string $device,int $idx): void {
   $profiles=wifi_profiles($device); if(!isset($profiles[$idx])) throw new RuntimeException('SSID'.$idx.' tidak tersedia pada modem ini.');
   $w=$profiles[$idx];$meta=device_meta($device);
   $pass=$w['password']!==''?'<code>'.htmlspecialchars($w['password']).'</code>':'<i>Password tidak dapat dibaca dari GenieACS.</i>';
-  $kb=[[['text'=>'✏️ UBAH SSID & PASSWORD','callback_data'=>'wifi_edit|'.token_put($device).'|'.$idx]],[['text'=>'🔓 NONAKTIFKAN PASSWORD','callback_data'=>'wifi_open|'.token_put($device).'|'.$idx]],[['text'=>'⬅️ PILIH WIFI','callback_data'=>'wifimenu|'.token_put($device)]]];
+  $kb=[[['text'=>'✏️ UBAH SSID & PASSWORD','callback_data'=>'wifi_edit|'.token_put($device).'|'.$idx]],[['text'=>'⬅️ PILIH WIFI','callback_data'=>'wifimenu|'.token_put($device)]]];
   tg_send($chat,'<b>📶 DETAIL WIFI</b>\n\n<b>Modem:</b> '.htmlspecialchars($meta['model']).'\n<b>SN:</b> <code>'.htmlspecialchars($meta['sn']).'</code>\n<b>Jaringan:</b> '.htmlspecialchars($w['label']).'\n<b>Status:</b> '.htmlspecialchars($w['enabled']==='true'?'Aktif':($w['enabled']==='false'?'Nonaktif':'Tidak diketahui')).'\n\n<b>SSID saat ini</b>\n<code>'.htmlspecialchars($w['ssid']).'</code>\n\n<b>Password saat ini</b>\n'.$pass,$kb);
 }
 function begin_wifi_edit($chat,string $device,int $idx): void {
@@ -1046,20 +1188,13 @@ function begin_wifi_password_only($chat,string $device,int $idx): void {
   state_set('await_'.$chat,['action'=>'wifi_password','device'=>$device,'index'=>$idx,'label'=>$w['label'],'old_ssid'=>$w['ssid'],'new_ssid'=>$w['ssid'],'model'=>$meta['model'],'sn'=>$meta['sn']]);
   tg_send($chat,'<b>🔐 PASSWORD WIFI BARU</b>\n\nNama SSID tetap: <code>'.htmlspecialchars($w['ssid']).'</code>\nKirim password baru (8–63 karakter).\n\nKetik /cancel untuk membatalkan.');
 }
-function begin_wifi_open($chat,string $device,int $idx): void {
-  if(!in_array($idx,[1,5],true)) throw new RuntimeException('Pilihan SSID tidak valid.');
-  $profiles=wifi_profiles($device); if(!isset($profiles[$idx])) throw new RuntimeException('Jaringan WiFi tidak tersedia.');
-  $w=$profiles[$idx]; $meta=device_meta($device);
-  state_set('wifi_'.$chat,['device'=>$device,'index'=>$idx,'label'=>$w['label'],'old_ssid'=>$w['ssid'],'new_ssid'=>$w['ssid'],'new_password'=>'','open'=>true,'model'=>$meta['model'],'sn'=>$meta['sn']]);
-  tg_send($chat,'<b>⚠️ NONAKTIFKAN KEAMANAN WIFI</b>\n\nJaringan: <b>'.htmlspecialchars($w['label']).'</b>\nSSID tetap: <code>'.htmlspecialchars($w['ssid']).'</code>\n\nWiFi akan menjadi jaringan terbuka dan siapa pun di sekitar dapat terhubung tanpa password. Lanjutkan?',[[['text'=>'🔓 YA, BUKA TANPA PASSWORD','callback_data'=>'wifiapply|'.$chat],['text'=>'✖️ BATAL','callback_data'=>'wificancel|'.$chat]]]);
-}
 function apply_wifi_change($chat): void {
-  $p=state_get('wifi_'.$chat);if(!$p||empty($p['device'])||!isset($p['index'],$p['new_ssid'])||(!empty($p['open'])?false:!isset($p['new_password'])))throw new RuntimeException('Data perubahan WiFi tidak lengkap atau sudah kedaluwarsa.');
-  $task=wifi_set_task($p['device'],(int)$p['index'],(string)$p['new_ssid'],(string)($p['new_password']??''),!empty($p['open']));
+  $p=state_get('wifi_'.$chat);if(!$p||empty($p['device'])||!isset($p['index'],$p['new_ssid'],$p['new_password']))throw new RuntimeException('Data perubahan WiFi tidak lengkap atau sudah kedaluwarsa.');
+  $task=wifi_set_task($p['device'],(int)$p['index'],(string)$p['new_ssid'],(string)$p['new_password']);
   // Do not retain credentials after task submission and never include them in logs.
   $device=$p['device'];$idx=(int)$p['index'];$newSsid=$p['new_ssid'];state_set('wifi_'.$chat,[]);
   log_event('wifi_change_task_sent',['device'=>$device,'index'=>$idx,'ssid'=>$newSsid,'task'=>$task]);
-  tg_send($chat,'<b>✅ PERINTAH WIFI DIKIRIM</b>\n\n<b>SSID:</b> <code>'.htmlspecialchars($newSsid).'</code>\n<b>Jaringan:</b> SSID'.$idx.'\n<b>Keamanan:</b> '.(!empty($p['open'])?'Tanpa password (terbuka)':'Menggunakan password').'\n<b>Task GenieACS:</b> <code>'.htmlspecialchars($task).'</code>\n\nTunggu modem melakukan Inform, lalu periksa kembali detail WiFi untuk memastikan perubahan sudah diterapkan.',[[['text'=>'🔍 VERIFIKASI PERUBAHAN','callback_data'=>'wifiverify|'.token_put($device).'|'.$idx.'|'.rawurlencode($newSsid)]],[['text'=>'📶 MENU WIFI','callback_data'=>'wifimenu|'.token_put($device)]],[['text'=>'🏠 MENU UTAMA','callback_data'=>'home']]]);
+  tg_send($chat,'<b>✅ PERINTAH WIFI DIKIRIM</b>\n\n<b>SSID baru:</b> <code>'.htmlspecialchars($newSsid).'</code>\n<b>Jaringan:</b> SSID'.$idx.'\n<b>Task GenieACS:</b> <code>'.htmlspecialchars($task).'</code>\n\nTunggu modem melakukan Inform, lalu periksa kembali detail WiFi untuk memastikan perubahan sudah diterapkan.',[[['text'=>'🔍 VERIFIKASI PERUBAHAN','callback_data'=>'wifiverify|'.token_put($device).'|'.$idx.'|'.rawurlencode($newSsid)]],[['text'=>'📶 MENU WIFI','callback_data'=>'wifimenu|'.token_put($device)]],[['text'=>'🏠 MENU UTAMA','callback_data'=>'home']]]);
 }
 
 function verify_wifi_change($chat,string $device,int $idx,string $expected): void {

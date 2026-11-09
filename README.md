@@ -1,4 +1,15 @@
-# WAN Provisioning V1.5.1
+# WAN Provisioning V1.5.2 (UI & Validation Update)
+
+## Pembaruan V1.5.2
+
+- Menu utama ditata ulang dan dikelompokkan berdasarkan monitoring modem dan pelanggan.
+- Validasi alamat pelanggan pada proses registrasi: minimal 1 karakter, maksimal 255 karakter.
+- Validasi password PPPoE pada proses registrasi: minimal 1 karakter, maksimal 64 karakter.
+- Hasil pencarian modem menampilkan ringkasan GenieACS yang lebih terstruktur.
+- Indikator redaman RX: hijau untuk nilai >= -20,99 dBm; kuning untuk -21 sampai -23,99 dBm; merah untuk <= -24 dBm.
+- Output registrasi pelanggan dibuat lebih terstruktur.
+
+**Catatan integrasi PHPNuxBill:** paket ini hanya menyediakan bridge `plans` dan `register`. Endpoint pencarian detail pelanggan berdasarkan username belum tersedia pada bridge yang disertakan. Karena itu, bagian informasi pelanggan PHPNuxBill belum dapat ditampilkan pada hasil pencarian modem sampai endpoint pencarian pelanggan ditambahkan. Data billing tidak dibuat atau ditebak oleh bot.
 
 ## Fitur tambahan V1.5.1
 
@@ -618,8 +629,6 @@ Setelah pelanggan berhasil dibuat dan paket aktif di PHPNuxBill, bot menampilkan
 - Jika SSID5 tidak tersedia, SSID5 tidak ditampilkan dan tidak ada task untuk SSID5.
 - Fitur lain dipertahankan dari V1.5.1.
 
-## V1.5.3 - Wi-Fi open network option
-- Added an explicit `Nonaktifkan Password` action for Wi-Fi SSID1 and SSID5 only.
-- Requires a confirmation because the selected Wi-Fi network becomes open and can be used by nearby devices without a password.
-- TR-098 uses `BeaconType=None`; TR-181 fallback uses `Device.WiFi.AccessPoint.{1|5}.Security.Mode=None`.
-- Device/firmware must expose the relevant parameter as writable. Check the GenieACS task result and verify on the ONT; not every vendor firmware accepts the same parameter.
+
+### Detail Pelanggan PHPNuxBill
+Menu **Detail Pelanggan** mengambil daftar dari endpoint bridge `customers` dengan pagination 25 pelanggan per pesan. Tombol Sebelumnya/Berikutnya dan Muat Ulang tersedia. Pastikan `billing_base_url` dan `billing_api_secret` pada `config.php` sesuai dengan bridge PHPNuxBill.
